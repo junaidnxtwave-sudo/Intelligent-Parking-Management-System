@@ -10,6 +10,8 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: parking
+    description: Parking discovery, bookings, and operations
 paths:
   /healthz:
     get:
@@ -24,7 +26,274 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /parking/lots:
+    get:
+      operationId: getParkingLots
+      tags: [parking]
+      summary: Find parking lots
+      parameters:
+        - name: q
+          in: query
+          required: false
+          schema: { type: string }
+        - name: availableOnly
+          in: query
+          required: false
+          schema: { type: boolean }
+        - name: sort
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [recommended, price, availability]
+      responses:
+        "200":
+          description: Matching parking lots
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ParkingLot"
+  /parking/me:
+    get:
+      operationId: getParkingSession
+      tags: [parking]
+      summary: Get the signed-in user's profile and parking role
+      responses:
+        "200":
+          description: Signed-in user profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParkingSession"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /parking/lots/{id}:
+    get:
+      operationId: getParkingLot
+      tags: [parking]
+      summary: Get a parking lot
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Parking lot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParkingLot"
+        "404":
+          description: Parking lot not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Operator access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /parking/lots/{id}/occupancy:
+    put:
+      operationId: updateParkingOccupancy
+      tags: [parking]
+      summary: Record a new sensor occupancy reading
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OccupancyUpdate"
+      responses:
+        "200":
+          description: Updated parking lot
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParkingLot"
+        "400":
+          description: Invalid occupancy reading
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "404":
+          description: Parking lot not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /parking/reservations:
+    get:
+      operationId: getParkingReservations
+      tags: [parking]
+      summary: List parking reservations
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [reserved, active, completed, cancelled]
+      responses:
+        "200":
+          description: Matching reservations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ParkingReservation"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+    post:
+      operationId: createParkingReservation
+      tags: [parking]
+      summary: Reserve a parking space
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ReservationInput"
+      responses:
+        "201":
+          description: Reservation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParkingReservation"
+        "400":
+          description: Invalid reservation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: No spaces available for the requested time
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /parking/reservations/{id}/cancel:
+    patch:
+      operationId: cancelParkingReservation
+      tags: [parking]
+      summary: Cancel a reservation
+      parameters:
+        - $ref: "#/components/parameters/IdPath"
+      responses:
+        "200":
+          description: Cancelled reservation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParkingReservation"
+        "404":
+          description: Reservation not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "409":
+          description: Reservation cannot be cancelled
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Reservation does not belong to this user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /parking/dashboard:
+    get:
+      operationId: getParkingDashboard
+      tags: [parking]
+      summary: Get parking operations metrics
+      responses:
+        "200":
+          description: Current operations overview and recent trend data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ParkingDashboard"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Operator access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+  /parking/activity:
+    get:
+      operationId: getParkingActivity
+      tags: [parking]
+      summary: Get recent parking activity
+      responses:
+        "200":
+          description: Recent parking activity events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ParkingActivity"
+        "401":
+          description: Sign-in required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+        "403":
+          description: Operator access required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
 components:
+  parameters:
+    IdPath:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
   schemas:
     HealthStatus:
       type: object
@@ -33,4 +302,148 @@ components:
           type: string
       required:
         - status
-
+    ParkingSession:
+      type: object
+      required: [userId, email, displayName, role]
+      properties:
+        userId: { type: string }
+        email: { type: string, format: email }
+        displayName: { type: string }
+        role:
+          type: string
+          enum: [driver, operator]
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+      required: [error]
+    ParkingLot:
+      type: object
+      required:
+        - id
+        - name
+        - address
+        - area
+        - distanceKm
+        - totalSpaces
+        - occupiedSpaces
+        - availableSpaces
+        - hourlyRate
+        - amenities
+        - isOpen
+        - latitude
+        - longitude
+        - updatedAt
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        address: { type: string }
+        area: { type: string }
+        distanceKm: { type: number }
+        totalSpaces: { type: integer }
+        occupiedSpaces: { type: integer }
+        availableSpaces: { type: integer }
+        hourlyRate: { type: number }
+        amenities:
+          type: array
+          items: { type: string }
+        isOpen: { type: boolean }
+        latitude: { type: number }
+        longitude: { type: number }
+        updatedAt: { type: string, format: date-time }
+    OccupancyUpdate:
+      type: object
+      required: [occupiedSpaces]
+      properties:
+        occupiedSpaces:
+          type: integer
+          minimum: 0
+    ParkingReservation:
+      type: object
+      required:
+        - id
+        - lotId
+        - lotName
+        - driverName
+        - email
+        - vehiclePlate
+        - startsAt
+        - endsAt
+        - durationHours
+        - status
+        - totalPrice
+        - confirmationCode
+        - createdAt
+      properties:
+        id: { type: integer }
+        lotId: { type: integer }
+        lotName: { type: string }
+        driverName: { type: string }
+        email: { type: string, format: email }
+        vehiclePlate: { type: string }
+        startsAt: { type: string, format: date-time }
+        endsAt: { type: string, format: date-time }
+        durationHours: { type: integer }
+        status:
+          type: string
+          enum: [reserved, active, completed, cancelled]
+        totalPrice: { type: number }
+        confirmationCode: { type: string }
+        createdAt: { type: string, format: date-time }
+    ReservationInput:
+      type: object
+      required: [lotId, vehiclePlate, startsAt, durationHours]
+      properties:
+        lotId: { type: integer }
+        vehiclePlate: { type: string, minLength: 1 }
+        startsAt: { type: string, format: date-time }
+        durationHours: { type: integer, minimum: 1, maximum: 24 }
+    ParkingDashboard:
+      type: object
+      required:
+        - totalLots
+        - totalSpaces
+        - occupiedSpaces
+        - availableSpaces
+        - occupancyRate
+        - activeReservations
+        - revenueToday
+        - revenueChangePercent
+        - occupancyTrend
+        - revenueTrend
+      properties:
+        totalLots: { type: integer }
+        totalSpaces: { type: integer }
+        occupiedSpaces: { type: integer }
+        availableSpaces: { type: integer }
+        occupancyRate: { type: number }
+        activeReservations: { type: integer }
+        revenueToday: { type: number }
+        revenueChangePercent: { type: number }
+        occupancyTrend:
+          type: array
+          items:
+            type: object
+            required: [label, occupancyRate]
+            properties:
+              label: { type: string }
+              occupancyRate: { type: number }
+        revenueTrend:
+          type: array
+          items:
+            type: object
+            required: [label, revenue]
+            properties:
+              label: { type: string }
+              revenue: { type: number }
+    ParkingActivity:
+      type: object
+      required: [id, type, lotName, message, createdAt]
+      properties:
+        id: { type: integer }
+        type:
+          type: string
+          enum: [reservation_created, reservation_cancelled, occupancy_updated]
+        lotName: { type: string }
+        message: { type: string }
+        createdAt: { type: string, format: date-time }

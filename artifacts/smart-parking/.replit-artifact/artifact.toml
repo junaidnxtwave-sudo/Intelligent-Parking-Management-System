@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "Intelligent Parking Management System"
+description = "A full-stack parking platform for drivers to discover available spaces and reserve parking, and for operators to manage lots, monitor occupancy, and review live activity."
+version = "1.0.0"
+id = "artifacts/smart-parking"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 21091
+
+[services.development]
+run = "pnpm --filter @workspace/smart-parking run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/smart-parking", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/smart-parking/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "21091"
+BASE_PATH = "/"
