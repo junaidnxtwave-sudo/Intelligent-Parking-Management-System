@@ -24,3 +24,6 @@ export * from './parkingReservationStatus';
 export * from './parkingSession';
 export * from './parkingSessionRole';
 export * from './reservationInput';
+export * from './supabaseConnectionCheck';
+export * from './supabaseConnectionCheckStatus';
+export * from './supabaseConnectionCheckTable';

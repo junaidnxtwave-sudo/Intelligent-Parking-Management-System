@@ -26,6 +26,37 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /supabase/check:
+    get:
+      operationId: checkSupabaseConnection
+      tags: [health]
+      summary: Check the Supabase connection
+      description: Checks Supabase credentials and reads one parking lot ID without returning parking data.
+      responses:
+        "200":
+          description: Supabase is reachable and the parking_lots table is available
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupabaseConnectionCheck"
+        "424":
+          description: Supabase is reachable but the parking_lots table is missing
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupabaseConnectionCheck"
+        "502":
+          description: Supabase could not complete the check
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupabaseConnectionCheck"
+        "503":
+          description: Supabase environment variables are not configured
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SupabaseConnectionCheck"
   /parking/lots:
     get:
       operationId: getParkingLots
@@ -302,6 +333,15 @@ components:
           type: string
       required:
         - status
+    SupabaseConnectionCheck:
+      type: object
+      required: [status, table]
+      properties:
+        status:
+          type: string
+          enum: [connected, table_missing, not_configured, unavailable]
+        table: { type: string, enum: [parking_lots] }
+        errorCode: { type: string }
     ParkingSession:
       type: object
       required: [userId, email, displayName, role]

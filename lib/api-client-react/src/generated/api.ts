@@ -30,7 +30,8 @@ import type {
   ParkingLot,
   ParkingReservation,
   ParkingSession,
-  ReservationInput
+  ReservationInput,
+  SupabaseConnectionCheck
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -126,6 +127,84 @@ export function useHealthCheck<TData = Awaited<ReturnType<typeof healthCheck>>, 
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getHealthCheckQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCheckSupabaseConnectionUrl = () => {
+
+
+
+
+  return `/api/supabase/check`
+}
+
+/**
+ * Checks Supabase credentials and reads one parking lot ID without returning parking data.
+ * @summary Check the Supabase connection
+ */
+export const checkSupabaseConnection = async ( options?: Parameters<typeof customFetch>[1]): Promise<SupabaseConnectionCheck> => {
+
+  return customFetch<SupabaseConnectionCheck>(getCheckSupabaseConnectionUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getCheckSupabaseConnectionQueryKey = () => {
+    return [
+    `/api/supabase/check`
+    ] as const;
+    }
+
+
+export const getCheckSupabaseConnectionQueryOptions = <TData = Awaited<ReturnType<typeof checkSupabaseConnection>>, TError = ErrorType<SupabaseConnectionCheck>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkSupabaseConnection>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getCheckSupabaseConnectionQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof checkSupabaseConnection>>> = ({ signal }) => checkSupabaseConnection({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof checkSupabaseConnection>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type CheckSupabaseConnectionQueryResult = NonNullable<Awaited<ReturnType<typeof checkSupabaseConnection>>>
+export type CheckSupabaseConnectionQueryError = ErrorType<SupabaseConnectionCheck>
+
+
+/**
+ * @summary Check the Supabase connection
+ */
+
+export function useCheckSupabaseConnection<TData = Awaited<ReturnType<typeof checkSupabaseConnection>>, TError = ErrorType<SupabaseConnectionCheck>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof checkSupabaseConnection>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getCheckSupabaseConnectionQueryOptions(options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

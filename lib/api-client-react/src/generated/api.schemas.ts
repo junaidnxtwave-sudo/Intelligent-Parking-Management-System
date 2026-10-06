@@ -9,6 +9,29 @@ export interface HealthStatus {
   status: string;
 }
 
+export type SupabaseConnectionCheckStatus = typeof SupabaseConnectionCheckStatus[keyof typeof SupabaseConnectionCheckStatus];
+
+
+export const SupabaseConnectionCheckStatus = {
+  connected: 'connected',
+  table_missing: 'table_missing',
+  not_configured: 'not_configured',
+  unavailable: 'unavailable',
+} as const;
+
+export type SupabaseConnectionCheckTable = typeof SupabaseConnectionCheckTable[keyof typeof SupabaseConnectionCheckTable];
+
+
+export const SupabaseConnectionCheckTable = {
+  parking_lots: 'parking_lots',
+} as const;
+
+export interface SupabaseConnectionCheck {
+  status: SupabaseConnectionCheckStatus;
+  table: SupabaseConnectionCheckTable;
+  errorCode?: string;
+}
+
 export type ParkingSessionRole = typeof ParkingSessionRole[keyof typeof ParkingSessionRole];
 
 

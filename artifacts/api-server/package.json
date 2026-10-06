@@ -12,6 +12,7 @@
   "dependencies": {
     "@clerk/express": "^2.1.75",
     "@clerk/shared": "^4.38.0",
+    "@supabase/supabase-js": "^2.117.2",
     "@workspace/api-zod": "workspace:*",
     "@workspace/db": "workspace:*",
     "cookie-parser": "^1.4.7",

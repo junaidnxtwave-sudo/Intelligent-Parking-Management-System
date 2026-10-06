@@ -18,6 +18,17 @@ export const HealthCheckResponse = zod.object({
 
 
 /**
+ * Checks Supabase credentials and reads one parking lot ID without returning parking data.
+ * @summary Check the Supabase connection
+ */
+export const CheckSupabaseConnectionResponse = zod.object({
+  "status": zod.enum(['connected', 'table_missing', 'not_configured', 'unavailable']),
+  "table": zod.enum(['parking_lots']),
+  "errorCode": zod.string().optional()
+})
+
+
+/**
  * @summary Find parking lots
  */
 export const GetParkingLotsQueryParams = zod.object({
